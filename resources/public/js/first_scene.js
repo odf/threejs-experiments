@@ -54,11 +54,6 @@ function renderer(viewport)
     return ren;
 }
 
-function attach(ren, container)
-{
-    container.append(ren.domElement);
-}
-
 function render(ren, sce, cam) {
     var timer = Date.now() * 0.0001;
 
