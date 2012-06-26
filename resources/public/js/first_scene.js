@@ -67,3 +67,11 @@ function render(ren, sce, cam) {
     }
     ren.render(sce, cam);
 }
+
+function animate(f) {
+    function go() {
+        requestAnimationFrame(go);
+        f();
+    }
+    go();
+}
