@@ -12,4 +12,5 @@ THREE.Scene = function() {};
 THREE.Mesh = function() {};
 THREE.SphereGeometry = function() {};
 THREE.MeshLambertMaterial = function() {};
+THREE.MeshPhongMaterial = function() {};
 THREE.PointLight = function() {};
