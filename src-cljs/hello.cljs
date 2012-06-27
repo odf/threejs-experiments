@@ -23,6 +23,16 @@
     (.add (light { :x 150 :y 300 :z 1000 } 0xFFFFFF))
     (.add (light { :x -150 :y 300 :z -1000 } 0x8080FF))))
 
+(defn render [renderer scene camera]
+  (let [timer (* (.now js/Date) 0.0001)]
+    (doto camera
+      (-> .-position (.set (* 200 (Math/cos timer)) 0 (* 200 (Math/sin timer))))
+      (.lookAt (.-position scene)))
+    (doseq [object (.-children scene)]
+      (set! (.. object -rotation -x) (+ (.. object -rotation -x) 0.01))
+      (set! (.. object -rotation -y) (+ (.. object -rotation -y) 0.005)))
+    (.render renderer scene camera)))
+
 (def viewport {:width 400 :height 300})
 
 (def camera
@@ -36,11 +46,16 @@
   (doto (THREE.WebGLRenderer.)
     (.setSize (:width viewport) (:height viewport))))
 
+(defn animate []
+  (do
+    (js/requestAnimationFrame animate)
+    (render renderer scene camera)))
+
 (.add scene camera)
 
 (em/at js/document
        ["#container"] (em/append (.-domElement renderer)))
 
-(js/animate (fn [] (js/render renderer scene camera)))
+(animate)
 
 (js/alert "Hello from ClojureScript!")
