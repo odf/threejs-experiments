@@ -3,6 +3,7 @@ var THREE = {};
 THREE.WebGLRenderer = function() {};
 THREE.WebGLRenderer.setSize = function() {};
 THREE.WebGLRenderer.render = function() {};
+THREE.WebGLRenderer.domElement = {}
 
 THREE.PerspectiveCamera = function() {};
 THREE.PerspectiveCamera.lookAt = function() {};
