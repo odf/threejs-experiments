@@ -1,5 +1,9 @@
 var THREE = {};
 
+THREE.Vector3 = function() {};
+
+THREE.Object3D = function() {};
+
 THREE.WebGLRenderer = function() {};
 THREE.WebGLRenderer.setSize = function() {};
 THREE.WebGLRenderer.render = function() {};
