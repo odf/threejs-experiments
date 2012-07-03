@@ -11,7 +11,7 @@
     ;; useful when debugging the app.
     :dev {:source-path "src-cljs"
           :jar true
-          :compiler {:output-to "resources/public/js/main-debug.js"
+          :compiler {:output-to "resources/dev/js/main.js"
                      :optimizations :whitespace
                      :pretty-print true}}
     ;; This build is identical to :prod except that pretty-printing is

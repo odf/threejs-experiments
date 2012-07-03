@@ -1,4 +1,3 @@
 lib
 .lein-*
-resources/public/js/main.js
-resources/public/js/main-debug.js
+main.js
