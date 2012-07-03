@@ -78,9 +78,13 @@
 (defn- ball-and-stick [positions edges]
   (let [ball-material (phong {:color 0xCC2020 :shininess 100})
         stick-material (phong {:color 0x2020CC :shininess 100})
-        balls (map-values #(mesh (sphere 10 8 8) % ball-material) positions)
+        balls (for [[k v] positions] (mesh (sphere 10 8 8) v ball-material))
         stick (fn [[u v]] (make-stick (positions u) (positions v) 5))
-        sticks (map #(mesh stick [0 0 0] stick-material) edges)]
+        sticks (map #(mesh (stick %) [0 0 0] stick-material) edges)
+        group (THREE.Object3D.)]
+    (doseq [b balls] (.add group b))
+    (doseq [s sticks] (.add group s))
+    group
     ))
 
 (def ^{:private true} viewport {:width 400 :height 300})
@@ -95,16 +99,33 @@
       (.lookAt (THREE.Vector3. 0 0 0))
       )))
 
-(def ^{:private true} test-stick
-  (mesh (make-stick [50 0 0] [60 70 10] 20) [0 0 0] (phong {:color 0x2020CC})))
+(def ^{:private true} test-graph
+  (ball-and-stick {:--- [-50 -50 -50]
+                   :--+ [-50 -50  50]
+                   :-+- [-50  50 -50]
+                   :-++ [-50  50  50]
+                   :+-- [ 50 -50 -50]
+                   :+-+ [ 50 -50  50]
+                   :++- [ 50  50 -50]
+                   :+++ [ 50  50  50]}
+                  [[:--- :--+]
+                   [:-+- :-++]
+                   [:+-- :+-+]
+                   [:++- :+++]
+                   [:--- :-+-]
+                   [:--+ :-++]
+                   [:+-- :++-]
+                   [:+-+ :+++]
+                   [:--- :+--]
+                   [:--+ :+-+]
+                   [:-+- :++-]
+                   [:-++ :+++]
+                   ]))
 
 (def ^{:private true} group
   (doto (THREE.Object3D.)
-    (.add (mesh (sphere 50 16 16) [0 0 0]
-                (phong {:color 0xCC2020})))
-    (.add (mesh (sphere 20 16 16) [80 50 0]
-                (phong {:color 0xCCCCCC :shininess 100})))
-    (.add test-stick)
+    (.add (mesh (sphere 50 16 16) [0 0 0] (phong {:color 0xFFDD40})))
+    (.add test-graph)
     ))
 
 (def ^{:private true} scene
