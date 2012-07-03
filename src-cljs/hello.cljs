@@ -32,51 +32,71 @@
   (into {} (map (fn [[k v]] [k (f v)]) m)))
 
 (defn- dot [u v]
-  (into [] (apply + (map * u v))))
+  (apply + (map * u v)))
+
+(defn- norm [v]
+  (Math/sqrt (dot v v)))
 
 (defn- cross [u v]
-  [(- (* (u 1) (v 2)) (* (u 2) (v 1)))
-   (- (* (u 2) (v 0)) (* (u 0) (v 2)))
-   (- (* (u 0) (v 1)) (* (u 1) (v 0)))])
+  (let [[u0 u1 u2] u
+        [v0 v1 v2] v]
+    [(- (* u1 v2) (* u2 v1))
+     (- (* u2 v0) (* u0 v2))
+     (- (* u0 v1) (* u1 v0))]))
+
+(defn- scaled [f v]
+  (map * (repeat f) v))
 
 (defn- normalized [v]
-  (let [norm (Math/sqrt (dot v v))]
-    (into [] (map #(/ % norm) v))))
+  (scaled (/ 1 (norm v)) v))
 
 (defn- make-stick
-  ([p q segments]
-     (let [d (normalized (map - q p))
+  ([p q radius segments]
+     (let [n segments
+           d (normalized (map - q p))
            u (cross d (if (> (dot d [1 0 0]) 0.9) [0 1 0] [1 0 0]))
            v (cross d u)
-           a (/ (* 2 Math/PI) segment)
-           lc (fn [nu v mu w] (into [] (map #(+ (* nu %1) (* mu %2)) v w)))
-           section (map #(lc (Math/cos (* a %)) u (Math/sin (* a %)) v)
-                        (range segments))]))
-  ([p q]
-     (make-stick p q 8)))
+           a (/ (* 2 Math/PI) n)
+           corner #(scaled radius (map + (scaled (Math/cos (* a %)) u)
+                                      (scaled (Math/sin (* a %)) v)))
+           section (map corner (range n))
+           stick (THREE.Geometry.)]
+       (doseq [[x y z] (map #(map + % p) section)]
+         (-> stick .-vertices (.push (THREE.Vector3. x y z))))
+       (doseq [[x y z] (map #(map + % q) section)]
+         (-> stick .-vertices (.push (THREE.Vector3. x y z))))
+       (doseq [i (range n) :let [j (-> i (+ 1) (mod n))]]
+         (-> stick .-faces (.push (THREE.Face4. i j (+ j n) (+ i n)))))
+       (.computeBoundingSphere stick)
+       (.computeFaceNormals stick)
+       (.computeVertexNormals stick)
+       stick
+       ))
+  ([p q radius]
+     (make-stick p q radius 8)))
 
 (defn- ball-and-stick [positions edges]
   (let [ball-material (phong {:color 0xCC2020 :shininess 100})
+        stick-material (phong {:color 0x2020CC :shininess 100})
         balls (map-values #(mesh (sphere 10 8 8) % ball-material) positions)
-        sticks (map (fn [[u v]] (make-stick (positions u) (positions v))) edges)]
+        stick (fn [[u v]] (make-stick (positions u) (positions v) 5))
+        sticks (map #(mesh stick [0 0 0] stick-material) edges)]
     ))
 
 (def ^{:private true} viewport {:width 400 :height 300})
 
 (def ^{:private true} camera
-  (let [view_angle 45
+  (let [view_angle 25
         aspect (/ (:width viewport) (:height viewport))
         near 0.1
         far 10000]
     (doto (THREE.PerspectiveCamera. view_angle aspect near far)
-      (-> .-position (.set 0 0 200))
+      (-> .-position (.set 0 0 350))
       (.lookAt (THREE.Vector3. 0 0 0))
       )))
 
-(def ^{:private true} test
-  (doto (mesh (THREE.CylinderGeometry. 5 5 50 8 1 false)
-              [60 0 0] (phong {:color 0x2020CC}))
-    (.lookAt (THREE.Vector3. 60 60 0))))
+(def ^{:private true} test-stick
+  (mesh (make-stick [50 0 0] [60 70 10] 20) [0 0 0] (phong {:color 0x2020CC})))
 
 (def ^{:private true} group
   (doto (THREE.Object3D.)
@@ -84,7 +104,7 @@
                 (phong {:color 0xCC2020})))
     (.add (mesh (sphere 20 16 16) [80 50 0]
                 (phong {:color 0xCCCCCC :shininess 100})))
-    (.add test)
+    (.add test-stick)
     ))
 
 (def ^{:private true} scene

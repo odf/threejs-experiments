@@ -14,6 +14,13 @@
           :compiler {:output-to "resources/public/js/main-debug.js"
                      :optimizations :whitespace
                      :pretty-print true}}
+    ;; This build is identical to :prod except that pretty-printing is
+    ;; enabled, making debugging of missing externs easier.
+    :pretty {:source-path "src-cljs"
+             :compiler {:output-to "resources/public/js/main.js"
+                        :optimizations :advanced
+                        :pretty-print true
+                        :externs ["src-cljs/externs.js"]}}
     ;; This build has the highest level of optimizations, so it is
     ;; efficient when running the app in production.
     :prod {:source-path "src-cljs"
