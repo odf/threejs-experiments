@@ -50,7 +50,7 @@
 (defn- normalized [v]
   (scaled (/ 1 (norm v)) v))
 
-(defn- make-stick
+(defn- stick
   ([p q radius segments]
      (let [n segments
            d (normalized (map - q p))
@@ -60,30 +60,29 @@
            corner #(scaled radius (map + (scaled (Math/cos (* a %)) u)
                                       (scaled (Math/sin (* a %)) v)))
            section (map corner (range n))
-           stick (THREE.Geometry.)]
+           geometry (THREE.Geometry.)]
        (doseq [[x y z] (map #(map + % p) section)]
-         (-> stick .-vertices (.push (THREE.Vector3. x y z))))
+         (-> geometry .-vertices (.push (THREE.Vector3. x y z))))
        (doseq [[x y z] (map #(map + % q) section)]
-         (-> stick .-vertices (.push (THREE.Vector3. x y z))))
+         (-> geometry .-vertices (.push (THREE.Vector3. x y z))))
        (doseq [i (range n) :let [j (-> i (+ 1) (mod n))]]
-         (-> stick .-faces (.push (THREE.Face4. i j (+ j n) (+ i n)))))
-       (.computeBoundingSphere stick)
-       (.computeFaceNormals stick)
-       (.computeVertexNormals stick)
-       stick
+         (-> geometry .-faces (.push (THREE.Face4. i j (+ j n) (+ i n)))))
+       (.computeBoundingSphere geometry)
+       (.computeFaceNormals geometry)
+       (.computeVertexNormals geometry)
+       geometry
        ))
   ([p q radius]
-     (make-stick p q radius 8)))
+     (stick p q radius 8)))
 
 (defn- ball-and-stick [positions edges]
-  (let [ball-material (phong {:color 0xCC2020 :shininess 100})
-        stick-material (phong {:color 0x2020CC :shininess 100})
-        balls (for [[k v] positions] (mesh (sphere 10 8 8) v ball-material))
-        stick (fn [[u v]] (make-stick (positions u) (positions v) 5))
-        sticks (map #(mesh (stick %) [0 0 0] stick-material) edges)
+  (let [red (phong {:color 0xCC2020 :shininess 100})
+        blue (phong {:color 0x2020CC :shininess 100})
         group (THREE.Object3D.)]
-    (doseq [b balls] (.add group b))
-    (doseq [s sticks] (.add group s))
+    (doseq [[k p] positions]
+      (.add group (mesh (sphere 10 8 8) p red)))
+    (doseq [[u v] edges]
+      (.add group (mesh (stick (positions u) (positions v) 5) [0 0 0] blue)))
     group
     ))
 
