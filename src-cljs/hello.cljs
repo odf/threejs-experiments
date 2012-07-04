@@ -28,9 +28,6 @@
 (defn- mesh [geometrie position material]
   (doto (THREE.Mesh. geometrie material) (set-position! position)))
 
-(defn- map-values [f m]
-  (into {} (map (fn [[k v]] [k (f v)]) m)))
-
 (defn- dot [u v]
   (apply + (map * u v)))
 
@@ -56,9 +53,9 @@
            d (normalized (map - q p))
            u (cross d (if (> (dot d [1 0 0]) 0.9) [0 1 0] [1 0 0]))
            v (cross d u)
-           a (/ (* 2 Math/PI) n)
-           corner #(scaled radius (map + (scaled (Math/cos (* a %)) u)
-                                      (scaled (Math/sin (* a %)) v)))
+           a (-> Math/PI (* 2) (/ n))
+           corner #(let [x (* a %), c (Math/cos x), s (Math/sin x)]
+                     (scaled radius (map + (scaled c u) (scaled s v))))
            section (map corner (range n))
            geometry (THREE.Geometry.)]
        (doseq [[x y z] (map #(map + % p) section)]
