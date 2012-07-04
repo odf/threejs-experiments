@@ -1,6 +1,9 @@
 (ns hello
-  (:require [enfocus.core :as ef])
+  (:require [enfocus.core :as ef]
+            [clojure.browser.repl :as repl])
   (:require-macros [enfocus.macros :as em]))
+
+(repl/connect "http://localhost:9000/repl")
 
 (defn- js-map [cljmap]
   (let [out js-obj]

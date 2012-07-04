@@ -27,4 +27,8 @@
            :compiler {:output-to "resources/public/js/main.js"
                       :optimizations :advanced
                       :pretty-print false
-                      :externs ["src-cljs/externs.js"]}}}})
+                      :externs ["src-cljs/externs.js"]}}}
+   :repl-listen-port 9000
+   :repl-launch-commands
+   {"my-launch" ["firefox" "-jsconsole"
+                 "http://localhost:9000/resources/dev/index.html"]}})
