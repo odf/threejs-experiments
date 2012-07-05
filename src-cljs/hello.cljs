@@ -2,20 +2,10 @@
   (:require [enfocus.core :as ef])
   (:require-macros [enfocus.macros :as em]))
 
-(defn clj->js
-  "Recursively transforms ClojureScript maps into Javascript objects,
-   other ClojureScript colls into JavaScript arrays, and ClojureScript
-   keywords into JavaScript strings.
-
-   Original by mmcgrana; upgraded by semperos."
-  [x]
-  (cond
-    (string? x) x
-    (keyword? x) (name x)
-    (map? x) (.-strobj (reduce (fn [m [k v]] (assoc m (clj->js k) (clj->js v)))
-                               {} x))
-    (coll? x) (apply array (map clj->js x))
-    :else x))
+(defn- js-map [cljmap]
+  (let [out js-obj]
+    (doall (map #(aset out (name (first %)) (second %)) cljmap))
+    out))
 
 (defn- set-position! [obj [x y z]]
   (-> obj .-position (.set x y z)))
@@ -27,10 +17,10 @@
   (doto (THREE.PointLight. color) (set-position! position)))
 
 (defn- lambert [parameters]
-  (THREE.MeshLambertMaterial. (clj->js parameters)))
+  (THREE.MeshLambertMaterial. (js-map parameters)))
 
 (defn- phong [parameters]
-  (THREE.MeshPhongMaterial. (clj->js parameters)))
+  (THREE.MeshPhongMaterial. (js-map parameters)))
 
 (defn- sphere [radius segments rings]
   (THREE.SphereGeometry. radius segments rings))
