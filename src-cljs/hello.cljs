@@ -13,9 +13,6 @@
 (defn- set-rotation! [obj [x y z]]
   (-> obj .-rotation (.set x y z)))
 
-(defn- light [position color]
-  (doto (THREE.PointLight. color) (set-position! position)))
-
 (defn- lambert [parameters]
   (THREE.MeshLambertMaterial. (js-map parameters)))
 
@@ -25,8 +22,15 @@
 (defn- sphere [radius segments rings]
   (THREE.SphereGeometry. radius segments rings))
 
-(defn- mesh [geometrie position material]
-  (doto (THREE.Mesh. geometrie material) (set-position! position)))
+(defn- mesh [name geometrie position material]
+  (doto (THREE.Mesh. geometrie material)
+    (set-position! position)
+    (-> .-name (set! name))))
+
+(defn- light [name position color]
+  (doto (THREE.PointLight. color)
+    (set-position! position)
+    (-> .-name (set! name))))
 
 (defn- dot [u v]
   (apply + (map * u v)))
@@ -72,14 +76,16 @@
   ([p q radius]
      (stick p q radius 8)))
 
-(defn- ball-and-stick [positions edges]
+(defn- ball-and-stick [name positions edges]
   (let [red (phong {:color 0xCC2020 :shininess 100})
         blue (phong {:color 0x2020CC :shininess 100})
         group (THREE.Object3D.)]
     (doseq [[k p] positions]
-      (.add group (mesh (sphere 10 8 8) p red)))
+      (.add group (mesh (pr-str k) (sphere 10 8 8) p red)))
     (doseq [[u v] edges]
-      (.add group (mesh (stick (positions u) (positions v) 5) [0 0 0] blue)))
+      (.add group (mesh (pr-str [u v]) (stick (positions u) (positions v) 5)
+                        [0 0 0] blue)))
+    (-> group .-name (set! name))
     group
     ))
 
@@ -96,7 +102,8 @@
       )))
 
 (def ^{:private true} test-graph
-  (ball-and-stick {:--- [-50 -50 -50]
+  (ball-and-stick "graph"
+                  {:--- [-50 -50 -50]
                    :--+ [-50 -50  50]
                    :-+- [-50  50 -50]
                    :-++ [-50  50  50]
@@ -120,15 +127,17 @@
 
 (def ^{:private true} group
   (doto (THREE.Object3D.)
-    (.add (mesh (sphere 50 16 16) [0 0 0] (phong {:color 0xFFDD40})))
+    (.add (mesh "center" (sphere 50 16 16) [0 0 0] (phong {:color 0xFFDD40})))
     (.add test-graph)
+    (-> .-name (set! "group"))
     ))
 
 (def ^{:private true} scene
   (doto (THREE.Scene.)
     (.add group)
-    (.add (light [150 300 1000] 0xFFFFFF))
-    (.add (light [-150 300 -1000] 0x8080FF))
+    (.add (light "main" [150 300 1000] 0xCCCCCC))
+    (.add (light "fill" [-300 -100 1000] 0x444444))
+    (.add (light "back" [300 300 -1000] 0x8080FF))
     (.add camera)))
 
 (def ^{:private true} renderer
