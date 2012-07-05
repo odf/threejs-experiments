@@ -36,5 +36,5 @@
                       :externs ["src-cljs/externs.js"]}}}
    :repl-listen-port 9000
    :repl-launch-commands
-   {"my-launch" ["firefox" "-jsconsole"
-                 "http://localhost:9000/resources/brepl/index.html"]}})
+   {"firefox" ["firefox"
+               "http://localhost:9000/resources/brepl/index.html"]}})
