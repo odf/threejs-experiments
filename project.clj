@@ -14,6 +14,12 @@
           :compiler {:output-to "resources/dev/js/main.js"
                      :optimizations :whitespace
                      :pretty-print true}}
+    ;; This build creates the browser side of a browser-repl connection.
+    :brepl {:source-path "src-cljs-brepl"
+            :jar true
+            :compiler {:output-to "resources/brepl/js/main.js"
+                       :optimizations :whitespace
+                       :pretty-print true}}
     ;; This build is identical to :prod except that pretty-printing is
     ;; enabled, making debugging of missing externs easier.
     :pretty {:source-path "src-cljs"
@@ -31,4 +37,4 @@
    :repl-listen-port 9000
    :repl-launch-commands
    {"my-launch" ["firefox" "-jsconsole"
-                 "http://localhost:9000/resources/dev/index.html"]}})
+                 "http://localhost:9000/resources/brepl/index.html"]}})
