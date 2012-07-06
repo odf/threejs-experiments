@@ -29,18 +29,13 @@
   ([p q radius]
      (stick p q radius 8)))
 
-(defn- ball-and-stick [name positions edges]
-  (let [red (t/phong {:color 0xCC2020 :shininess 100})
-        blue (t/phong {:color 0x2020CC :shininess 100})
-        group (THREE.Object3D.)]
-    (doseq [[k p] positions]
-      (.add group (t/mesh (pr-str k) p (t/sphere 10 8 8) red)))
-    (doseq [[u v] edges]
-      (.add group (t/mesh (pr-str [u v]) [0 0 0]
-                          (stick (positions u) (positions v) 5) blue)))
-    (-> group .-name (set! name))
-    group
-    ))
+(defn- ball-and-stick [name positions edges ball-material stick-material]
+  (let [balls (for [[k p] positions]
+                (t/mesh (pr-str k) p (t/sphere 10 8 8) ball-material))
+        sticks (for [[u v] edges]
+                 (t/mesh (pr-str [u v]) [0 0 0]
+                         (stick (positions u) (positions v) 5) stick-material))]
+    (apply t/group (concat [name [0 0 0]] balls sticks))))
 
 (def ^{:private true} viewport {:width 400 :height 300})
 
@@ -48,35 +43,20 @@
   (let [{:keys [width height]} viewport]
     (t/camera "camera" [0 0 350] {:aspect (/ width height)})))
 
-(def ^{:private true} test-graph
-  (ball-and-stick "graph"
-                  {:--- [-50 -50 -50]
-                   :--+ [-50 -50  50]
-                   :-+- [-50  50 -50]
-                   :-++ [-50  50  50]
-                   :+-- [ 50 -50 -50]
-                   :+-+ [ 50 -50  50]
-                   :++- [ 50  50 -50]
-                   :+++ [ 50  50  50]}
-                  [[:--- :--+]
-                   [:-+- :-++]
-                   [:+-- :+-+]
-                   [:++- :+++]
-                   [:--- :-+-]
-                   [:--+ :-++]
-                   [:+-- :++-]
-                   [:+-+ :+++]
-                   [:--- :+--]
-                   [:--+ :+-+]
-                   [:-+- :++-]
-                   [:-++ :+++]
-                   ]))
-
 (def ^{:private true} group
   (t/group "group" [0 0 0]
            (t/mesh "center" [0 0 0] (t/sphere 50 16 16)
                    (t/phong {:color 0xFFDD40}))
-           test-graph))
+           (ball-and-stick "graph"
+                           {:--- [-50 -50 -50] :--+ [-50 -50  50]
+                            :-+- [-50  50 -50] :-++ [-50  50  50]
+                            :+-- [ 50 -50 -50] :+-+ [ 50 -50  50]
+                            :++- [ 50  50 -50] :+++ [ 50  50  50]}
+                           [[:--- :--+] [:-+- :-++] [:+-- :+-+] [:++- :+++]
+                            [:--- :-+-] [:--+ :-++] [:+-- :++-] [:+-+ :+++]
+                            [:--- :+--] [:--+ :+-+] [:-+- :++-] [:-++ :+++]]
+                           (t/phong {:color 0xCC2020 :shininess 100})
+                           (t/phong {:color 0x2020CC :shininess 100}))))
 
 (def ^{:private true} scene
   (t/scene group
@@ -86,8 +66,7 @@
            camera))
 
 (def ^{:private true} renderer
-  (doto (THREE.WebGLRenderer.)
-    (.setSize (:width viewport) (:height viewport))))
+  (t/renderer (:width viewport) (:height viewport)))
 
 (em/at js/document ["#container"] (em/append (.-domElement renderer)))
 

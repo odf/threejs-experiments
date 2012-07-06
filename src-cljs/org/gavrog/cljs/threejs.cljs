@@ -26,8 +26,8 @@
 (defn sphere [radius segments rings]
   (THREE.SphereGeometry. radius segments rings))
 
-(defn mesh [name position geometrie material]
-  (doto (THREE.Mesh. geometrie material)
+(defn mesh [name position geometry material]
+  (doto (THREE.Mesh. geometry material)
     (set-position! position)
     (set-name! name)))
 
@@ -54,3 +54,7 @@
   (let [result (THREE.Scene.)]
     (doseq [x objs] (.add result x))
     result))
+
+(defn renderer [width height]
+  (doto (THREE.WebGLRenderer.)
+    (.setSize width height)))
