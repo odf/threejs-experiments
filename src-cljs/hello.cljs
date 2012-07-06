@@ -34,10 +34,10 @@
         blue (t/phong {:color 0x2020CC :shininess 100})
         group (THREE.Object3D.)]
     (doseq [[k p] positions]
-      (.add group (t/mesh (pr-str k) (t/sphere 10 8 8) p red)))
+      (.add group (t/mesh (pr-str k) p (t/sphere 10 8 8) red)))
     (doseq [[u v] edges]
-      (.add group (t/mesh (pr-str [u v]) (stick (positions u) (positions v) 5)
-                          [0 0 0] blue)))
+      (.add group (t/mesh (pr-str [u v]) [0 0 0]
+                          (stick (positions u) (positions v) 5) blue)))
     (-> group .-name (set! name))
     group
     ))
@@ -73,20 +73,17 @@
                    ]))
 
 (def ^{:private true} group
-  (doto (THREE.Object3D.)
-    (.add (t/mesh "center" (t/sphere 50 16 16) [0 0 0]
-                  (t/phong {:color 0xFFDD40})))
-    (.add test-graph)
-    (-> .-name (set! "group"))
-    ))
+  (t/group "group" [0 0 0]
+           (t/mesh "center" [0 0 0] (t/sphere 50 16 16)
+                   (t/phong {:color 0xFFDD40}))
+           test-graph))
 
 (def ^{:private true} scene
-  (doto (THREE.Scene.)
-    (.add group)
-    (.add (t/light "main" [150 300 1000] 0xCCCCCC))
-    (.add (t/light "fill" [-300 -100 1000] 0x444444))
-    (.add (t/light "back" [300 300 -1000] 0x8080FF))
-    (.add camera)))
+  (t/scene group
+           (t/light "main" [150 300 1000] 0xCCCCCC)
+           (t/light "fill" [-300 -100 1000] 0x444444)
+           (t/light "back" [300 300 -1000] 0x8080FF)
+           camera))
 
 (def ^{:private true} renderer
   (doto (THREE.WebGLRenderer.)

@@ -26,7 +26,7 @@
 (defn sphere [radius segments rings]
   (THREE.SphereGeometry. radius segments rings))
 
-(defn mesh [name geometrie position material]
+(defn mesh [name position geometrie material]
   (doto (THREE.Mesh. geometrie material)
     (set-position! position)
     (set-name! name)))
@@ -42,3 +42,15 @@
     (set-position! position)
     (.lookAt (v3 (or lookAt [0 0 0])))
     (set-name! name)))
+
+(defn group [name position & objs]
+  (let [result (THREE.Object3D.)]
+    (doseq [x objs] (.add result x))
+    (set-name! result name)
+    (set-position! result position)
+    result))
+
+(defn scene [& objs]
+  (let [result (THREE.Scene.)]
+    (doseq [x objs] (.add result x))
+    result))
