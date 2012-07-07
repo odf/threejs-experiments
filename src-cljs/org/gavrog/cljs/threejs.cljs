@@ -26,6 +26,24 @@
 (defn sphere [radius segments rings]
   (THREE.SphereGeometry. radius segments rings))
 
+(defn geometry [vertices faces]
+  (let [result (THREE.Geometry.)]
+    (doseq [[x y z] vertices]
+      (-> result .-vertices (.push (THREE.Vector3. x y z))))
+    (doseq [f faces]
+      (cond (= 3 (count f))
+            (let [[a b c] f]
+              (-> result .-faces (.push (THREE.Face3. a b c))))
+            (= 4 (count f))
+            (let [[a b c d] f]
+              (-> result .-faces (.push (THREE.Face4. a b c d))))
+            :else ;; not implemented yet
+            nil))
+    (.computeBoundingSphere result)
+    (.computeFaceNormals result)
+    (.computeVertexNormals result)
+    result))
+
 (defn mesh [name position geometry material]
   (doto (THREE.Mesh. geometry material)
     (set-position! position)

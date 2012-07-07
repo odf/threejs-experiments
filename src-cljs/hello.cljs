@@ -13,19 +13,11 @@
            a (-> Math/PI (* 2) (/ n))
            corner #(let [x (* a %), c (Math/cos x), s (Math/sin x)]
                      (v/scaled radius (map + (v/scaled c u) (v/scaled s v))))
-           section (map corner (range n))
-           geometry (THREE.Geometry.)]
-       (doseq [[x y z] (map #(map + % p) section)]
-         (-> geometry .-vertices (.push (THREE.Vector3. x y z))))
-       (doseq [[x y z] (map #(map + % q) section)]
-         (-> geometry .-vertices (.push (THREE.Vector3. x y z))))
-       (doseq [i (range n) :let [j (-> i (+ 1) (mod n))]]
-         (-> geometry .-faces (.push (THREE.Face4. i j (+ j n) (+ i n)))))
-       (.computeBoundingSphere geometry)
-       (.computeFaceNormals geometry)
-       (.computeVertexNormals geometry)
-       geometry
-       ))
+           section (map corner (range n))]
+       (t/geometry
+        (concat (map #(map + % p) section) (map #(map + % q) section))
+        (for [i (range n) :let [j (-> i (+ 1) (mod n))]]
+          [i j (+ j n) (+ i n)]))))
   ([p q radius]
      (stick p q radius 8)))
 
