@@ -58,7 +58,8 @@
            camera))
 
 (def ^{:private true} renderer
-  (t/renderer (:width viewport) (:height viewport)))
+  (let [{:keys [width height]} viewport]
+    (t/renderer width height)))
 
 (em/at js/document ["#container"] (em/append (.-domElement renderer)))
 
