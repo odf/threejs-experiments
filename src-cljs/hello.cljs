@@ -61,8 +61,6 @@
   (let [{:keys [width height]} viewport]
     (t/renderer width height)))
 
-(em/at js/document ["#container"] (em/append (.-domElement renderer)))
-
 (defn- render []
   (let [timer (* (.now js/Date) 0.0001)]
     (t/set-rotation! group [0 timer 0])
@@ -72,5 +70,16 @@
   (.requestAnimationFrame js/window animate)
   (render))
 
-(.log js/console "Starting animation")
-(animate)
+(em/defaction mouse-pos [event]
+  ["#status"] (em/content (str (.-clientX event) " " (.-clientY event))))
+
+(defn- go []
+  (do
+    (em/at js/document
+           ["#container"] (em/append (.-domElement renderer))
+           ["#status"] (em/content "Hello!")
+           ["#container"] (em/listen :mousemove mouse-pos))
+    (.log js/console "Starting animation")
+    (animate)))
+
+(set! (.-onload js/window) go)
