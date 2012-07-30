@@ -37,4 +37,6 @@
    :repl-listen-port 9000
    :repl-launch-commands
    {"firefox" ["firefox"
-               "http://localhost:9000/resources/brepl/index.html"]}})
+               "http://localhost:9000/resources/brepl/index.html"]
+    "chrome" ["/opt/google/chrome/chrome"
+              "http://localhost:9000/resources/brepl/index.html"]}})
