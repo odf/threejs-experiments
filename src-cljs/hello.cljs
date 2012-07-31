@@ -35,10 +35,11 @@
 
 (defn- ball-and-stick [name positions edges ball-material stick-material]
   (let [balls (for [[k p] positions]
-                (t/mesh (pr-str k) p (t/sphere 10 8 8) ball-material))
+                (t/mesh (pr-str k) p (t/sphere 10 8 8) (ball-material)))
         sticks (for [[u v] edges]
                  (t/mesh (pr-str [u v]) [0 0 0]
-                         (stick (positions u) (positions v) 5) stick-material))]
+                         (stick (positions u) (positions v) 5)
+                         (stick-material)))]
     (apply t/group (concat [name [0 0 0]] balls sticks))))
 
 (def ^{:private true} viewport {:width 400 :height 300})
@@ -59,8 +60,8 @@
                            [[:--- :--+] [:-+- :-++] [:+-- :+-+] [:++- :+++]
                             [:--- :-+-] [:--+ :-++] [:+-- :++-] [:+-+ :+++]
                             [:--- :+--] [:--+ :+-+] [:-+- :++-] [:-++ :+++]]
-                           (t/phong {:color 0xCC2020 :shininess 100})
-                           (t/phong {:color 0x2020CC :shininess 100}))))
+                           #(t/phong {:color 0xCC2020 :shininess 100})
+                           #(t/phong {:color 0x2020CC :shininess 100}))))
 
 (def ^{:private true} scene
   (t/scene group
@@ -73,14 +74,9 @@
   (let [{:keys [width height]} viewport]
     (t/renderer width height {:antialias true :precision "highp"})))
 
-(defn- render []
-  (let [timer (* (.now js/Date) 0.0001)]
-    (t/set-rotation! group [0 timer 0])
-    (.render renderer scene camera)))
-
-(defn- animate []
-  (.requestAnimationFrame js/window animate)
-  (render))
+(def ^{:private true} x-mouse (atom nil))
+(def ^{:private true} y-mouse (atom nil))
+(def ^{:private true} selected (atom nil))
 
 (defn- mouse-position [event elem]
   (let [doc-body (.-body js/document)
@@ -108,19 +104,43 @@
           graph-elements (.-children (.getChildByName scene "graph" true))]
       (map #(.-object %) (.intersectObjects ray graph-elements)))))
 
-(em/defaction show-mouse-pos [event elem]
-  ["#status"]
-  (em/content (let [[x-elem y-elem] (mouse-position event elem)
-                    [x-cam y-cam] (to-viewport [x-elem y-elem] elem)
-                    objects (picked-objects [x-cam y-cam])]
-                (when-let [found (first objects)] (.-name found)))))
+(defn- update-mouse [event elem]
+  (let [[x-elem y-elem] (mouse-position event elem)
+        [x-cam y-cam] (to-viewport [x-elem y-elem] elem)]
+    (reset! x-mouse x-cam)
+    (reset! y-mouse y-cam)))
+
+(em/defaction report-status []
+  ["#status"] (em/content (when-let [[elem _] @selected]
+                            (str (.-name elem) " is selected."))))
+
+(defn- highlight-selected []
+  (let [[elem old-color] @selected
+        found (first (picked-objects [@x-mouse @y-mouse]))]
+    (if (not= found elem)
+      (do (when elem (-> elem .-material .-color (.setHex old-color)))
+          (if found
+            (let [color (-> found .-material .-color)]
+              (reset! selected [found (.getHex color)])
+              (.setHex color 0x00ff00))
+            (reset! selected nil))))))
+
+(defn- render []
+  (do
+    (t/set-rotation! group [0 (* (.now js/Date) 0.0001) 0])
+    (.render renderer scene camera)
+    (highlight-selected)
+    (report-status)))
+
+(defn- animate []
+  (.requestAnimationFrame js/window animate)
+  (render))
 
 (defn- go []
   (let [elem (.-domElement renderer)]
     (em/at js/document
            ["#container"] (em/append elem)
-           ["#status"] (em/content "Hello!")
-           ["#container"] (em/listen :mousemove #(show-mouse-pos % elem)))
+           ["#container"] (em/listen :mousemove #(update-mouse % elem)))
     (.log js/console "Starting animation")
     (animate)))
 

@@ -39,6 +39,7 @@
               (-> result .-faces (.push (THREE.Face4. a b c d))))
             :else ;; not implemented yet
             nil))
+    (.computeCentroids result)
     (.computeBoundingSphere result)
     (.computeFaceNormals result)
     (.computeVertexNormals result)
