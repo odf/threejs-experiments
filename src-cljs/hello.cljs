@@ -1,8 +1,9 @@
 ;; Notes to self:
 ;; =============
 ;;
-;; - Make sure the file browser-repl is in the path and the launch command in
-;;   project.clj is correct.
+;; - Make sure the file browser-repl is in the path, the Emacs variable
+;;   inferior-lisp-program is set to call it, and the launch command in
+;;   project.clj is correct for my browser of the day.
 ;; - C-c C-z starts an inferior lisp and opens a browser page.
 ;; - C-x C-e executes the s-expression before the cursor.
 ;; - To reload this file, reload browser page and run (load-namespace "hello").
