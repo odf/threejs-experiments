@@ -97,12 +97,22 @@
     [(-> x (/ wd) (* 2) (- 1))
      (-> y (/ ht) (* -2) (+ 1))]))
 
+(def ^{:private true} projector (THREE.Projector.))
+
+(defn- picked-objects [[x y]]
+  (let [vector (THREE.Vector3. x y 1)
+        cam-pos (.-position camera)]
+    (.unprojectVector projector vector camera)
+    (let [ray (THREE.Ray. cam-pos (-> vector (.subSelf cam-pos) (.normalize)))
+          graph-elements (.-children (.getChildByName scene "graph" true))]
+      (map #(.-object %) (.intersectObjects ray graph-elements)))))
+
 (em/defaction show-mouse-pos [event elem]
   ["#status"]
   (em/content (let [[x-elem y-elem] (mouse-position event elem)
                     [x-cam y-cam] (to-viewport [x-elem y-elem] elem)
-                    pr #(-> % (* 100) (int) (/ 100))]
-                (str x-elem " " y-elem " | " (pr x-cam) " " (pr y-cam)))))
+                    objects (picked-objects [x-cam y-cam])]
+                (when-let [found (first objects)] (.-name found)))))
 
 (defn- go []
   (let [elem (.-domElement renderer)]
