@@ -73,6 +73,6 @@
     (doseq [x objs] (.add result x))
     result))
 
-(defn renderer [width height]
-  (doto (THREE.WebGLRenderer.)
+(defn renderer [width height options]
+  (doto (THREE.WebGLRenderer. (js-map options))
     (.setSize width height)))

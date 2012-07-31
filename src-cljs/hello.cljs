@@ -70,7 +70,7 @@
 
 (def ^{:private true} renderer
   (let [{:keys [width height]} viewport]
-    (t/renderer width height)))
+    (t/renderer width height {:antialias true :precision "highp"})))
 
 (defn- render []
   (let [timer (* (.now js/Date) 0.0001)]
