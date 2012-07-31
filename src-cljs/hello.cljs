@@ -81,15 +81,34 @@
   (.requestAnimationFrame js/window animate)
   (render))
 
-(em/defaction mouse-pos [event]
-  ["#status"] (em/content (str (.-clientX event) " " (.-clientY event))))
+(defn- mouse-position [event elem]
+  (let [doc-body (.-body js/document)
+        doc-elem (.-documentElement js/document)
+        rect (.getBoundingClientRect elem)]
+    [(+ (.-clientX event) (.-scrollLeft doc-body) (.-scrollLeft doc-elem)
+        (- (.-left rect)))
+     (+ (.-clientY event) (.-scrollTop doc-body) (.-scrollTop doc-elem)
+        (- (.-top rect)))]))
+
+(defn- to-viewport [[x y] elem]
+  (let [rect (.getBoundingClientRect elem)
+        wd (- (.-right rect) (.-left rect))
+        ht (- (.-bottom rect) (.-top rect))]
+    [(-> x (/ wd) (* 2) (- 1))
+     (-> y (/ ht) (* -2) (+ 1))]))
+
+(em/defaction show-mouse-pos [event elem]
+  ["#status"]
+  (em/content (let [[x-elem y-elem] (mouse-position event elem)
+                    [x-cam y-cam] (to-viewport [x-elem y-elem] elem)]
+                (str x-elem " " y-elem " | " x-cam " " y-cam))))
 
 (defn- go []
-  (do
+  (let [elem (.-domElement renderer)]
     (em/at js/document
-           ["#container"] (em/append (.-domElement renderer))
+           ["#container"] (em/append elem)
            ["#status"] (em/content "Hello!")
-           ["#container"] (em/listen :mousemove mouse-pos))
+           ["#container"] (em/listen :mousemove #(show-mouse-pos % elem)))
     (.log js/console "Starting animation")
     (animate)))
 
