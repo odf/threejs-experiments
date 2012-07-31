@@ -100,8 +100,9 @@
 (em/defaction show-mouse-pos [event elem]
   ["#status"]
   (em/content (let [[x-elem y-elem] (mouse-position event elem)
-                    [x-cam y-cam] (to-viewport [x-elem y-elem] elem)]
-                (str x-elem " " y-elem " | " x-cam " " y-cam))))
+                    [x-cam y-cam] (to-viewport [x-elem y-elem] elem)
+                    pr #(-> % (* 100) (int) (/ 100))]
+                (str x-elem " " y-elem " | " (pr x-cam) " " (pr y-cam)))))
 
 (defn- go []
   (let [elem (.-domElement renderer)]
