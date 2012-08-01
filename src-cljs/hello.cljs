@@ -102,12 +102,15 @@
 
 (em/defaction report-status []
   ["#status"] (em/content (when-let [[elem _] @selected]
-                            (str (t/get-name elem) " is selected."))))
+                            (str (t/name elem) " is selected."))))
 
 (defn- picked-objects [[x y]]
-  (let [ray (t/picking-ray [x y] camera)
-        graph-elements (.-children (.getChildByName scene "graph" true))]
-    (map #(.-object %) (.intersectObjects ray graph-elements))))
+  (t/pick [x y] camera (for [group (t/children scene)
+                             :when (= "group" (t/name group))
+                             graph (t/children group)
+                             :when (= "graph" (t/name graph))
+                             child (t/children graph)]
+                         child)))
 
 (defn- highlight-selected []
   (let [[elem old-color] @selected
@@ -116,14 +119,14 @@
       (do (when elem (t/set-color! elem old-color))
           (if found
             (do
-              (reset! selected [found (t/get-color found)])
+              (reset! selected [found (t/color found)])
               (t/set-color! found 0x00ff00))
             (reset! selected nil))))))
 
 (defn- render []
   (do
     (t/set-rotation! group [0 (* (.now js/Date) 0.0001) 0])
-    (.render renderer scene camera)
+    (t/render renderer scene camera)
     (highlight-selected)
     (report-status)))
 
