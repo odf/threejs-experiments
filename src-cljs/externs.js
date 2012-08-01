@@ -15,9 +15,26 @@ THREE.Geometry.computeVertexNormals  = function() {};
 THREE.Geometry.faces                 = {};
 THREE.Geometry.vertices              = {};
 
-THREE.Mesh                     = function() {};
+/**
+ * @constructor
+ */
 THREE.MeshLambertMaterial      = function() {};
+
+/**
+ * @constructor
+ */
 THREE.MeshPhongMaterial        = function() {};
+
+/**
+ * @constructor
+ */
+THREE.Mesh                     = function() {};
+
+/**
+ * @type {THREE.MeshLambertMaterial | THREE.MeshPhongMaterial}
+ */
+THREE.Mesh.material;
+
 THREE.Object3D                 = function() {};
 
 THREE.PerspectiveCamera        = function() {};
@@ -28,7 +45,21 @@ THREE.PointLight               = function() {};
 THREE.Projector                = function() {};
 THREE.Projector.unprojectVector = function() {};
 
+/**
+ * @constructor
+ */
+function IntersectResult() {};
+
+/**
+ * @type {THREE.Mesh}
+ */
+IntersectResult.object;
+
 THREE.Ray                      = function() {};
+
+/**
+ * @return {Array.<IntersectResult>}
+ */
 THREE.Ray.intersectObjects     = function() {};
 
 THREE.Scene                    = function() {};

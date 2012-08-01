@@ -94,16 +94,6 @@
     [(-> x (/ wd) (* 2) (- 1))
      (-> y (/ ht) (* -2) (+ 1))]))
 
-(def ^{:private true} projector (THREE.Projector.))
-
-(defn- picked-objects [[x y]]
-  (let [vector (THREE.Vector3. x y 1)
-        cam-pos (.-position camera)]
-    (.unprojectVector projector vector camera)
-    (let [ray (THREE.Ray. cam-pos (-> vector (.subSelf cam-pos) (.normalize)))
-          graph-elements (.-children (.getChildByName scene "graph" true))]
-      (map #(.-object %) (.intersectObjects ray graph-elements)))))
-
 (defn- update-mouse [event elem]
   (let [[x-elem y-elem] (mouse-position event elem)
         [x-cam y-cam] (to-viewport [x-elem y-elem] elem)]
@@ -114,15 +104,25 @@
   ["#status"] (em/content (when-let [[elem _] @selected]
                             (str (.-name elem) " is selected."))))
 
+(def ^{:private true} projector (THREE.Projector.))
+
+(defn- picked-objects [[x y]]
+  (let [vector (THREE.Vector3. x y 1)
+        cam-pos (.-position camera)]
+    (.unprojectVector projector vector camera)
+    (let [ray (THREE.Ray. cam-pos (-> vector (.subSelf cam-pos) (.normalize)))
+          graph-elements (.-children (.getChildByName scene "graph" true))]
+      (map #(.-object %) (.intersectObjects ray graph-elements)))))
+
 (defn- highlight-selected []
   (let [[elem old-color] @selected
         found (first (picked-objects [@x-mouse @y-mouse]))]
     (if (not= found elem)
-      (do (when elem (-> elem .-material .-color (.setHex old-color)))
+      (do (when elem (-> elem .-material .-color (set! old-color)))
           (if found
-            (let [color (-> found .-material .-color)]
-              (reset! selected [found (.getHex color)])
-              (.setHex color 0x00ff00))
+            (do
+              (reset! selected [found (-> found .-material .-color)])
+              (-> found .-material .-color (set! (THREE.Color. 0x00ff00))))
             (reset! selected nil))))))
 
 (defn- render []
