@@ -77,3 +77,11 @@
 (defn renderer [width height options]
   (doto (THREE.WebGLRenderer. (js-map options))
     (.setSize width height)))
+
+(defn projector [] (THREE.Projector.))
+
+(defn picking-ray [[x y] camera projector]
+  (let [vector (THREE.Vector3. x y 1)
+        cam-pos (.-position camera)]
+    (.unprojectVector projector vector camera)
+    (THREE.Ray. cam-pos (-> vector (.subSelf cam-pos) (.normalize)))))

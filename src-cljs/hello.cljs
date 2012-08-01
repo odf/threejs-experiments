@@ -104,15 +104,12 @@
   ["#status"] (em/content (when-let [[elem _] @selected]
                             (str (.-name elem) " is selected."))))
 
-(def ^{:private true} projector (THREE.Projector.))
+(def ^{:private true} projector (t/projector))
 
 (defn- picked-objects [[x y]]
-  (let [vector (THREE.Vector3. x y 1)
-        cam-pos (.-position camera)]
-    (.unprojectVector projector vector camera)
-    (let [ray (THREE.Ray. cam-pos (-> vector (.subSelf cam-pos) (.normalize)))
-          graph-elements (.-children (.getChildByName scene "graph" true))]
-      (map #(.-object %) (.intersectObjects ray graph-elements)))))
+  (let [ray (t/picking-ray [x y] camera projector)
+        graph-elements (.-children (.getChildByName scene "graph" true))]
+    (map #(.-object %) (.intersectObjects ray graph-elements))))
 
 (defn- highlight-selected []
   (let [[elem old-color] @selected
