@@ -102,12 +102,10 @@
 
 (em/defaction report-status []
   ["#status"] (em/content (when-let [[elem _] @selected]
-                            (str (.-name elem) " is selected."))))
-
-(def ^{:private true} projector (t/projector))
+                            (str (t/get-name elem) " is selected."))))
 
 (defn- picked-objects [[x y]]
-  (let [ray (t/picking-ray [x y] camera projector)
+  (let [ray (t/picking-ray [x y] camera)
         graph-elements (.-children (.getChildByName scene "graph" true))]
     (map #(.-object %) (.intersectObjects ray graph-elements))))
 
@@ -115,11 +113,11 @@
   (let [[elem old-color] @selected
         found (first (picked-objects [@x-mouse @y-mouse]))]
     (if (not= found elem)
-      (do (when elem (-> elem .-material .-color (set! old-color)))
+      (do (when elem (t/set-color! elem old-color))
           (if found
             (do
-              (reset! selected [found (-> found .-material .-color)])
-              (-> found .-material .-color (set! (THREE.Color. 0x00ff00))))
+              (reset! selected [found (t/get-color found)])
+              (t/set-color! found 0x00ff00))
             (reset! selected nil))))))
 
 (defn- render []

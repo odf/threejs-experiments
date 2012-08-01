@@ -14,8 +14,17 @@
 (defn set-rotation! [obj [x y z]]
   (-> obj .-rotation (.set x y z)))
 
+(defn get-name [obj]
+  (.-name obj))
+
 (defn set-name! [obj name]
   (-> obj .-name (set! name)))
+
+(defn get-color [obj]
+  (-> obj .-material .-color .getHex))
+
+(defn set-color! [obj color]
+  (-> obj .-material .-color (.setHex color)))
 
 (defn lambert [parameters]
   (THREE.MeshLambertMaterial. (js-map parameters)))
@@ -78,10 +87,11 @@
   (doto (THREE.WebGLRenderer. (js-map options))
     (.setSize width height)))
 
-(defn projector [] (THREE.Projector.))
+(def ^{:private true} projector (atom nil))
 
-(defn picking-ray [[x y] camera projector]
-  (let [vector (THREE.Vector3. x y 1)
+(defn picking-ray [[x y] camera]
+  (let [vector (v3 [x y 1])
         cam-pos (.-position camera)]
-    (.unprojectVector projector vector camera)
+    (when (nil? @projector) (reset! projector (THREE.Projector.)))
+    (.unprojectVector @projector vector camera)
     (THREE.Ray. cam-pos (-> vector (.subSelf cam-pos) (.normalize)))))

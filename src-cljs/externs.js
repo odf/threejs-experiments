@@ -19,7 +19,10 @@ THREE.Mesh                     = function() {};
 THREE.Mesh.material;
 
 THREE.MeshLambertMaterial      = function() {};
+THREE.MeshLambertMaterial.color;
+
 THREE.MeshPhongMaterial        = function() {};
+THREE.MeshPhongMaterial.color;
 
 THREE.Object3D                 = function() {};
 
