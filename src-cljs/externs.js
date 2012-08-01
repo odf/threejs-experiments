@@ -31,18 +31,8 @@ THREE.PointLight               = function() {};
 THREE.Projector                = function() {};
 THREE.Projector.unprojectVector = function() {};
 
-function IntersectResult() {};
-
-/**
- * @type {THREE.Mesh}
- */
-IntersectResult.object;
-
 THREE.Ray                      = function() {};
 
-/**
- * @return {Array.<IntersectResult>}
- */
 THREE.Ray.intersectObjects     = function() {};
 
 THREE.Scene                    = function() {};
