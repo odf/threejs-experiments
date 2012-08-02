@@ -16,17 +16,11 @@
 ;;   k-dimensional lattice Z^k.
 
 (ns org.gavrog.cljs.pgraphs
-  :require [org.gavrog.cljs.vectormath :as v])
+  (:require [org.gavrog.cljs.vectormath :as v]))
 
-;; Variations of filter and map that don't create new collections.
+(defn map-values [f m] (reduce (fn [m [k v]] (assoc m k (f v))) m m))
 
-(defn filter-set [f s] (reduce disj s (filter #(not (f %)) s)))
-
-(defn map-values [f m]
-  (reduce (fn [m [k v]] (let [fv (f v)] (if (= v fv) m (assoc m k fv)))) m m))
-
-
-;; An implementation of periodic graphs as a persistent data structure.
+;; TODO we need to model adjacencies as vertex-vector pairs.
 
 (defprotocol IPGraph
   (dimension [G])
@@ -43,10 +37,34 @@
   (dimension [G] dim)
   (vertices [G] verts)
   (adjacent [G v] (or (adjs v) #{}))
-  (shift [G v w] (if (< v w)
-                   (or (shifts [v w])
-                       (apply vector (repeat dim 0)))
-                   (map - (shift G w v)))))
+  (shift [G v w] (if (> v w)
+                   (map - (shift G w v))
+                   (let [s (or (shifts [v w])
+                               (apply vector (repeat dim 0)))]
+                     (if (and (= v w)
+                              (< s (repeat 0)))
+                       (map - s)
+                       s))))
+  (with-vertex [G v]
+    (if (verts v)
+      G
+      (Graph. dim (conj verts v) adjs shifts)))
+  (without-vertex [G v]
+    (if-not (verts v)
+      G
+      (Graph. dim
+              (disj verts v)
+              (map-values #(reduce disj % (filter (partial = v) %))
+                          (dissoc adjs v))
+              (reduce dissoc shifts (filter #((set %) v) (keys shifts))))))
+  (with-edge [G v w s]
+    (cond
+     (> v w)
+     (with-edge G w v (map - s))
+     (and (verts v) ((adjs v) w) (= s (shifts [v w])))
+     G
+     :else
+     ())))
 
 (defn vertex? [G v]
   ((vertices G) v))
