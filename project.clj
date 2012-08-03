@@ -2,7 +2,7 @@
 (defproject lein-cljsbuild-example "1.2.3"
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [enfocus "0.9.1-SNAPSHOT"]]
-  :plugins [[lein-cljsbuild "0.2.1"]]
+  :plugins [[lein-cljsbuild "0.2.5"]]
   :cljsbuild
   {
    :builds

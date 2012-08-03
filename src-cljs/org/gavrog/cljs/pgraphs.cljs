@@ -100,4 +100,4 @@
                                       :when (not (or (previous x) (current x)))]
                                   x))]
               (lazy-seq (cons (count current) (step current advance)))))]
-    (step #{} #{[seed (origin graph)]})))
+    (step #{} (into #{} [[seed (origin graph)]]))))
