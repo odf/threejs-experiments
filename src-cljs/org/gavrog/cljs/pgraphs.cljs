@@ -20,51 +20,18 @@
 
 (defn map-values [f m] (reduce (fn [m [k v]] (assoc m k (f v))) m m))
 
-;; TODO we need to model adjacencies as vertex-vector pairs.
-
 (defprotocol IPGraph
   (dimension [G])
   (vertices [G])
   (adjacent [G v])
-  (shift [G v w])
   (with-vertex [G v])
   (without-vertex [G v])
   (with-edge [G v w s])
-  (without-edge [G v w]))
+  (without-edge [G v w s]))
 
-(defrecord PGraph [dim verts adjs shifts]
-  IPGraph
-  (dimension [G] dim)
-  (vertices [G] verts)
-  (adjacent [G v] (or (adjs v) #{}))
-  (shift [G v w] (if (> v w)
-                   (map - (shift G w v))
-                   (let [s (or (shifts [v w])
-                               (apply vector (repeat dim 0)))]
-                     (if (and (= v w)
-                              (< s (repeat 0)))
-                       (map - s)
-                       s))))
-  (with-vertex [G v]
-    (if (verts v)
-      G
-      (Graph. dim (conj verts v) adjs shifts)))
-  (without-vertex [G v]
-    (if-not (verts v)
-      G
-      (Graph. dim
-              (disj verts v)
-              (map-values #(reduce disj % (filter (partial = v) %))
-                          (dissoc adjs v))
-              (reduce dissoc shifts (filter #((set %) v) (keys shifts))))))
-  (with-edge [G v w s]
-    (cond
-     (> v w)
-     (with-edge G w v (map - s))
-     (and (verts v) ((adjs v) w) (= s (shifts [v w])))
-     G
-     :else
-     ())))
+(defn- reverse-edge? [v w s]
+  (or (> v w)
+      (and (= v w) (< s (repeat 0)))))
 
 (defn vertex? [G v]
   ((vertices G) v))
@@ -73,16 +40,52 @@
   (and (vertex? G v)
        (empty? (adjacent G v))))
 
-(defn edge?
-  ([G v w]
-     (and (vertex? G v)
-          ((adjacent G v) w)))
-  ([G v w s]
-     (and (edge? G v w)
-          (= s (shift G v w)))))
+(defn edge? [G v w s]
+  (and (vertex? G v)
+       ((adjacent G v) [w s])))
 
 (defn edges [G]
   (for [v (vertices G)
-        w (adjacent G v)
-        :when (< v w)]
-    [v w (shift G v w)]))
+        [w s] (adjacent G v)
+        :when (not (reverse-edge? v w s))]
+    [v w s]))
+
+(defrecord PGraph [dim verts adjs]
+  IPGraph
+  (dimension [G] dim)
+  (vertices [G] verts)
+  (adjacent [G v] (or (adjs v) #{}))
+  (with-vertex [G v]
+    (if (vertex? G v)
+      G
+      (PGraph. dim
+               (conj verts v)
+               (assoc adjs v #{}))))
+  (without-vertex [G v]
+    (if-not (vertex? G v)
+      G
+      (PGraph. dim
+              (disj verts v)
+              (map-values #(reduce disj % (filter (fn [[w s]] (= v w)) %))
+                          (dissoc adjs v)))))
+  (with-edge [G v w s]
+    (if (edge? G v w s)
+      G
+      (PGraph. dim
+              (conj verts v w)
+              (assoc adjs
+                v (conj (or (adjs v) #{}) [w s])
+                w (conj (or (adjs w) #{}) [v (map - s)])))))
+  (without-edge [G v w s]
+    (if-not (edge? G v w s)
+      G
+      (PGraph. dim
+              verts
+              (assoc adjs
+                v (disj (adjs v) [w s])
+                w (disj (adjs w) [v (map - s)]))))))
+
+(defn make-graph [dim & edge-specs]
+  (reduce (fn [G [v w & s]] (with-edge G v w s))
+          (PGraph. dim #{} {})
+          (partition (+ 2 dim) edge-specs)))
