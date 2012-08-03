@@ -94,10 +94,10 @@
 
 (defn coordination-sequence [graph seed]
   (letfn [(step [previous current]
-            (let [advance #(into #{}
-                                 (for [[v s] current
-                                       x (neighbors graph v s)
-                                       :when (not (or (previous x) (current x)))]
-                                   x))]
-              (lazy-seq (cons (count current) (step current (advance))))))]
+            (let [advance (into #{}
+                                (for [[v s] current
+                                      x (neighbors graph v s)
+                                      :when (not (or (previous x) (current x)))]
+                                  x))]
+              (lazy-seq (cons (count current) (step current advance)))))]
     (step #{} #{[seed (origin graph)]})))
