@@ -92,15 +92,21 @@
           (PGraph. dim #{} {})
           (partition (+ 2 dim) edge-specs)))
 
+(defn- next-level [graph prev curr]
+  (let [tmp (transient #{})
+        nxt (for [[v s] curr
+                  w (neighbors graph v s)
+                  :when (not (or (prev w) (curr w)))]
+              w)]
+    (doseq [v nxt] (conj! tmp v))
+    (persistent! tmp)))
+
+(defn- cs [graph previous current]
+  (let [advance (next-level graph previous current)]
+    (lazy-seq (cons (count current) (cs graph current advance)))))
+
 (defn coordination-sequence [graph seed]
-  (letfn [(step [previous current]
-            (let [advance (into #{}
-                                (for [[v s] current
-                                      x (neighbors graph v s)
-                                      :when (not (or (previous x) (current x)))]
-                                  x))]
-              (lazy-seq (cons (count current) (step current advance)))))]
-    (step #{} (into #{} [[seed (origin graph)]]))))
+  (cs graph #{} (into #{} [[seed (origin graph)]])))
 
 (defn- dfs [graph start]
   (let [stack (transient [start])
