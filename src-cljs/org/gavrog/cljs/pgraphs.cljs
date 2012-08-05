@@ -101,3 +101,28 @@
                                   x))]
               (lazy-seq (cons (count current) (step current advance)))))]
     (step #{} (into #{} [[seed (origin graph)]]))))
+
+(defn- dfs [graph start]
+  (let [stack (transient [start])
+        shifts (transient {start (origin graph)})
+        translations (transient #{})]
+    (while (> (count stack) 0)
+      (let [v (nth stack 0)]
+        (pop! stack)
+        (doseq [[w s] (adjacent graph v)]
+          (if-let [t (get shifts w)]
+            (conj! translations (map + s t (map - (get shifts v))))
+            (do
+              (conj! stack w)
+              (assoc! shifts w (map - (get shifts v) s)))))))
+    [(keys (persistent! shifts)) (persistent! translations)]))
+
+(defn components [graph]
+  (let [seen (transient #{})
+        result (transient [])]
+    (doseq [v (vertices graph)]
+      (if-not (seen v)
+        (let [[nodes translations] (dfs graph v)]
+          (conj! result [nodes translations])
+          (doseq [v nodes] (conj! seen v)))))
+    (persistent! result)))
