@@ -17,14 +17,11 @@
 
 (defn map-values [f m] (reduce (fn [m [k v]] (assoc m k (f v))) m m))
 
-(defprotocol IPGraph
-  (dimension [G])
-  (vertices [G])
-  (adjacent [G v])
-  (with-vertex [G v])
-  (without-vertex [G v])
-  (with-edge [G v w s])
-  (without-edge [G v w s]))
+(defn dimension [G] (G :dim))
+
+(defn vertices [G] (G :verts))
+
+(defn adjacent [G v] (or ((G :adjs) v) #{}))
 
 (defn- reverse-edge? [v w s]
   (or (> v w)
@@ -50,46 +47,48 @@
 (defn neighbors [G v s]
   (map (fn [[w t]] (vector w (map + s t))) (adjacent G v)))
 
-(defn origin [G] (repeat (dimension G) 0))
+(defn with-vertex [G v]
+  (if (vertex? G v)
+    G
+    (let [{:keys [dim verts adjs]} G]
+      {:dim dim
+       :verts (conj verts v)
+       :adjs (assoc adjs v #{})})))
 
-(defrecord PGraph [dim verts adjs]
-  IPGraph
-  (dimension [G] dim)
-  (vertices [G] verts)
-  (adjacent [G v] (or (adjs v) #{}))
-  (with-vertex [G v]
-    (if (vertex? G v)
-      G
-      (PGraph. dim
-               (conj verts v)
-               (assoc adjs v #{}))))
-  (without-vertex [G v]
-    (if-not (vertex? G v)
-      G
-      (PGraph. dim
-              (disj verts v)
-              (map-values #(reduce disj % (filter (fn [[w s]] (= v w)) %))
-                          (dissoc adjs v)))))
-  (with-edge [G v w s]
-    (if (edge? G v w s)
-      G
-      (PGraph. dim
-              (conj verts v w)
-              (assoc adjs
-                v (conj (or (adjs v) #{}) [w s])
-                w (conj (or (adjs w) #{}) [v (map - s)])))))
-  (without-edge [G v w s]
-    (if-not (edge? G v w s)
-      G
-      (PGraph. dim
-              verts
-              (assoc adjs
-                v (disj (adjs v) [w s])
-                w (disj (adjs w) [v (map - s)]))))))
+(defn without-vertex [G v]
+  (if-not (vertex? G v)
+    G
+    (let [{:keys [dim verts adjs]} G]
+      {:dim dim
+       :verts (disj verts v)
+       :adjs (map-values #(reduce disj % (filter (fn [[w s]] (= v w)) %))
+                         (dissoc adjs v))})))
+
+(defn with-edge [G v w s]
+  (if (edge? G v w s)
+    G
+    (let [{:keys [dim verts adjs]} G]
+      {:dim dim
+       :verts (conj verts v w)
+       :adjs (assoc adjs
+               v (conj (or (adjs v) #{}) [w s])
+               w (conj (or (adjs w) #{}) [v (map - s)]))})))
+
+(defn without-edge [G v w s]
+  (if-not (edge? G v w s)
+    G
+    (let [{:keys [dim verts adjs]} G]
+      {:dim dim
+       :verts verts
+       :adjs (assoc adjs
+               v (disj (adjs v) [w s])
+               w (disj (adjs w) [v (map - s)]))})))
+
+(defn origin [G] (repeat (dimension G) 0))
 
 (defn make-graph [dim & edge-specs]
   (reduce (fn [G [v w & s]] (with-edge G v w s))
-          (PGraph. dim #{} {})
+          {:dim dim :verts #{} :adjs {}}
           (partition (+ 2 dim) edge-specs)))
 
 (defn- next-level [graph prev curr]
