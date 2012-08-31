@@ -1,5 +1,11 @@
 ;; This module deals with periodic graphs.
 ;;
+;; A periodic graph is encoded by its quotient graph, which is a finite
+;; multi-graph with vector-labelled edges.
+
+
+;; (Obsolete description, taken from the old Python version:
+;;
 ;; A periodic, undirected graph is given as a sequence of edges.
 ;;   
 ;; Edges look like (i,j,(a1,...,ak)), where
@@ -10,7 +16,7 @@
 ;; - no edge may occur twice with the same vector
 ;; - the resulting graph is connected
 ;; - the vectors all have the same dimension k and together span the
-;;   k-dimensional lattice Z^k.
+;;   k-dimensional lattice Z^k.)
 
 (ns org.gavrog.cljs.pgraphs
   (:require [org.gavrog.cljs.vectormath :as v]))
